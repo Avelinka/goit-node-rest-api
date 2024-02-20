@@ -7,17 +7,15 @@ export const createContactSchema = Joi.object({
   name: Joi.string().min(3).required(),
   email: Joi.string().email().required(),
   phone: Joi.string()
-    .min(7)
     .regex(/^\(\d{3}\) \d{3}-\d{4}$/)
     .required(),
   favorite: Joi.boolean(),
 });
+
 export const updateContactSchema = Joi.object({
   name: Joi.string().min(3),
   email: Joi.string().email(),
-  phone: Joi.string()
-    .min(7)
-    .regex(/^\(\d{3}\) \d{3}-\d{4}$/),
+  phone: Joi.string().regex(/^\(\d{3}\) \d{3}-\d{4}$/),
   favorite: Joi.boolean(),
 });
 
@@ -42,6 +40,11 @@ const contactShema = new Schema(
     favorite: {
       type: Boolean,
       default: false,
+    },
+    owner: {
+      type: Schema.Types.ObjectId,
+      ref: "user",
+      required: true,
     },
   },
   { versionKey: false, timestamps: true }
