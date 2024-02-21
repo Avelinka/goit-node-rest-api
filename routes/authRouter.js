@@ -1,7 +1,9 @@
 import express from "express";
+
 import authController from "../controllers/authControllers.js";
 import validateBody from "../helpers/validateBody.js";
 import authenticate from "../middlewares/authenticate.js";
+import upload from "../middlewares/upload.js";
 
 import {
   registerSchema,
@@ -28,6 +30,13 @@ authRrouter.patch(
   authenticate,
   validateBody(subscriptionShema),
   authController.updateSubscription
+);
+
+authRrouter.patch(
+  "/avatars",
+  authenticate,
+  upload.single("avatar"),
+  authController.updateAvatar
 );
 
 export default authRrouter;

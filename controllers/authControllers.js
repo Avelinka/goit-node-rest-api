@@ -1,6 +1,10 @@
 import dotenv from "dotenv";
 import jwt from "jsonwebtoken";
 import bcrypt from "bcrypt";
+import gravatar from "gravatar";
+import Jimp from "jimp";
+import path from "path";
+import fs from "fs/promises";
 
 import HttpError from "../helpers/HttpError.js";
 import { ctrlWrapper } from "../helpers/ctrlWrapper.js";
@@ -9,6 +13,7 @@ import { User } from "../schemas/user.js";
 dotenv.config();
 
 const { SECRET_KEY } = process.env;
+const avatarsDir = path.resolve("public", "avatars");
 
 const registerUser = async (req, res) => {
   const { email, password } = req.body;
@@ -19,8 +24,13 @@ const registerUser = async (req, res) => {
   }
 
   const hashPassword = await bcrypt.hash(password, 10);
+  const avatarURL = gravatar.url(email);
 
-  const newUser = await User.create({ ...req.body, password: hashPassword });
+  const newUser = await User.create({
+    ...req.body,
+    password: hashPassword,
+    avatarURL,
+  });
 
   res.status(201).json({
     user: {
@@ -86,7 +96,29 @@ const updateSubscription = async (req, res) => {
   if (!result) {
     throw HttpError(404);
   }
+
   res.json(result);
+};
+
+const updateAvatar = async (req, res) => {
+  const owner = req.user.id;
+  const { path: tempUpload, originalname } = req.file;
+  const filename = `${owner}_${originalname}`;
+
+  const resultUpload = path.resolve(avatarsDir, filename);
+
+  const normalAvatar = await Jimp.read(tempUpload);
+  normalAvatar.resize(250, 250).write(tempUpload);
+
+  await fs.rename(tempUpload, resultUpload);
+
+  const avatarURL = path.join("avatars", filename);
+
+  await User.findByIdAndUpdate(owner, { avatarURL });
+
+  res.json({
+    avatarURL,
+  });
 };
 
 export default {
@@ -95,4 +127,5 @@ export default {
   getCurrentUser: ctrlWrapper(getCurrentUser),
   logoutUser: ctrlWrapper(logoutUser),
   updateSubscription: ctrlWrapper(updateSubscription),
+  updateAvatar: ctrlWrapper(updateAvatar),
 };
