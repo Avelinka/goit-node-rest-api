@@ -24,7 +24,7 @@ const standartEmail = {
   html: "",
 };
 
-const sendEmail = async (data) => {
+const sendEmail = (data) => {
   const email = { ...standartEmail, ...data };
   return transport.sendMail(email);
 };
